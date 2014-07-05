@@ -1,5 +1,9 @@
+from stack import Stack 
+import operator
+
 class BinaryTree:
-    """A binary tree that uses nodes and references."""
+    """A binary tree that uses nodes and references.
+    This is just a regular binary tree, not a binary search tree."""
 
     def __init__(self, rootObj):
         """Initializing the tree."""
@@ -76,13 +80,57 @@ def postorder(tree):
     postorder(tree.rightChild)
     print(tree.getRootVal())
 
-def main():
-    tree = buildtree()
-    print(preorder(tree))
-    print(postorder(tree))
-    print(inorder(tree))
+def buildParseTree(fpexp):
+    """Builds a parse tree, given an 
+    expression. Here the operators and operands
+    of the expression must all be separated by spaces."""
+    fplist = fpexp.split()
+    pStack = Stack() #stack that will hold the parent nodes
+    eTree = BinaryTree('')
+    pStack.push(eTree)
+    currentTree = eTree
+    for i in fplist:
+        if i == '(': #insert a left child and move the pointer there (push parent into stack so that you can return)
+            currentTree.insertLeft('') 
+            pStack.push(currentTree)
+            currentTree = currentTree.getLeftChild()
+        elif i.isdigit(): #store the number and move to the parent (by popping parent off stack)
+            currentTree.setRootVal(int(i)) 
+            parent = pStack.pop()
+            currentTree = parent
+        elif i in ['+', '-', '*', '/']: #store the operator, move to right child
+            currentTree.setRootVal(i)
+            currentTree.insertRight('')
+            pStack.push(currentTree)
+            currentTree = currentTree.getRightChild()
+        elif i == ')': #move up to parent
+            parent = pStack.pop()
+            currentTree = parent
+        else:
+            raise ValueError
+    return eTree
 
-main()
+pTree = buildParseTree("( 3 + ( 4 * 5 )")
+
+def evaluateParseTree(ptree):
+    ops = {'+': operator.add, '-': operator.sub, 
+            '*': operator.mul, '/': operator.truediv}
+    if ptree == None:
+        return None
+    elif ptree.getLeftChild() == None and ptree.getRightChild() == None:
+        return ptree.getRootVal()
+    elif ptree.getRootVal() in ops:
+        return ops[ptree.getRootVal()](evaluateParseTree(ptree.getLeftChild()), 
+                    evaluateParseTree(ptree.getRightChild()))
+    else:
+        return None
+
+print(evaluateParseTree(pTree))
+
+
+
+
+
 
 
 
